@@ -8,6 +8,7 @@ function Rope.new()
 	self.gravity = Vector3.new(0, -workspace.Gravity, 0)
 	self.damping = 0.99
 	self.iterations = 12
+	self.tearLength = nil -- e.g. 2.5 = a stick snaps at 2.5x its rest length
 	return self
 end
 
@@ -62,6 +63,19 @@ function Rope:step(dt)
 			end
 		end
 	end
+
+	-- returns the sticks that snapped this step so whatever draws them can clean up
+	local torn = {}
+	if self.tearLength then
+		for i = #self.sticks, 1, -1 do
+			local s = self.sticks[i]
+			if (s.b.pos - s.a.pos).Magnitude > s.len * self.tearLength then
+				table.remove(self.sticks, i)
+				table.insert(torn, s)
+			end
+		end
+	end
+	return torn
 end
 
 return Rope
