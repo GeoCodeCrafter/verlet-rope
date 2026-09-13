@@ -14,26 +14,35 @@ folder.Parent = workspace
 local rope, parts
 local held, heldWasPinned, depth = nil, false, 0
 
-local function build()
-	folder:ClearAllChildren()
-	held = nil
-	rope = Rope.new()
-	rope.tearLength = 2.5
-	rope:line(Vector3.new(0, 30, -20), Vector3.new(18, 30, -20), 30)
-
-	parts = {}
-	for _, s in rope.sticks do
+local function addParts(from, thickness, color)
+	for i = from, #rope.sticks do
+		local s = rope.sticks[i]
 		local part = Instance.new("Part")
 		part.Anchored = true
 		part.CanCollide = false
 		part.CanQuery = false
 		part.CanTouch = false
 		part.Material = Enum.Material.Fabric
-		part.Color = Color3.fromRGB(150, 110, 70)
-		part.Size = Vector3.new(THICKNESS, THICKNESS, s.len)
+		part.Color = color
+		part.Size = Vector3.new(thickness, thickness, s.len)
 		part.Parent = folder
 		parts[s] = part
 	end
+end
+
+local function build()
+	folder:ClearAllChildren()
+	held = nil
+	parts = {}
+	rope = Rope.new()
+	rope.tearLength = 2.5
+
+	rope:line(Vector3.new(0, 30, -20), Vector3.new(18, 30, -20), 30)
+	addParts(1, THICKNESS, Color3.fromRGB(150, 110, 70))
+
+	local n = #rope.sticks
+	rope:grid(Vector3.new(-24, 30, -20), Vector3.xAxis, 16, 12, 1, 3)
+	addParts(n + 1, 0.15, Color3.fromRGB(200, 60, 60))
 end
 build()
 
@@ -97,7 +106,7 @@ RunService.RenderStepped:Connect(function(dt)
 		local a, b = s.a.pos, s.b.pos
 		local part = parts[s]
 		-- stretch the part to the real length so a pulled rope doesn't turn into a dotted line
-		part.Size = Vector3.new(THICKNESS, THICKNESS, (b - a).Magnitude)
+		part.Size = Vector3.new(part.Size.X, part.Size.X, (b - a).Magnitude)
 		table.insert(list, part)
 		table.insert(cframes, CFrame.lookAt((a + b) / 2, b))
 	end

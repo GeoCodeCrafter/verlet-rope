@@ -36,6 +36,26 @@ function Rope:line(from, to, segments)
 	return first, prev
 end
 
+-- cloth: cols x rows points hanging down from `origin` along `right`, every `pinEvery`th top point pinned
+function Rope:grid(origin, right, cols, rows, gap, pinEvery)
+	local grid = {}
+	for y = 0, rows - 1 do
+		grid[y] = {}
+		for x = 0, cols - 1 do
+			local pinned = y == 0 and x % (pinEvery or 1) == 0
+			local p = self:point(origin + right * (x * gap) - Vector3.yAxis * (y * gap), pinned)
+			grid[y][x] = p
+			if x > 0 then
+				self:stick(grid[y][x - 1], p)
+			end
+			if y > 0 then
+				self:stick(grid[y - 1][x], p)
+			end
+		end
+	end
+	return grid
+end
+
 function Rope:step(dt)
 	local g = self.gravity * dt * dt
 	for _, p in self.points do
