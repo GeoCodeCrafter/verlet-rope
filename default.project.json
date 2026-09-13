@@ -1,0 +1,14 @@
+{
+  "name": "verlet-rope",
+  "tree": {
+    "$className": "DataModel",
+    "ReplicatedStorage": {
+      "Rope": { "$path": "src/Rope.luau" }
+    },
+    "StarterPlayer": {
+      "StarterPlayerScripts": {
+        "Demo": { "$path": "src/Demo.client.luau" }
+      }
+    }
+  }
+}

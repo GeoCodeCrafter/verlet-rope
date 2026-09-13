@@ -1,0 +1,67 @@
+local Rope = {}
+Rope.__index = Rope
+
+function Rope.new()
+	local self = setmetatable({}, Rope)
+	self.points = {}
+	self.sticks = {}
+	self.gravity = Vector3.new(0, -workspace.Gravity, 0)
+	self.damping = 0.99
+	self.iterations = 12
+	return self
+end
+
+function Rope:point(pos, pinned)
+	local p = { pos = pos, old = pos, pinned = pinned or false }
+	table.insert(self.points, p)
+	return p
+end
+
+function Rope:stick(a, b)
+	local s = { a = a, b = b, len = (a.pos - b.pos).Magnitude }
+	table.insert(self.sticks, s)
+	return s
+end
+
+-- rope from `from` to `to`, first point pinned
+function Rope:line(from, to, segments)
+	local first = self:point(from, true)
+	local prev = first
+	for i = 1, segments do
+		local p = self:point(from:Lerp(to, i / segments))
+		self:stick(prev, p)
+		prev = p
+	end
+	return first, prev
+end
+
+function Rope:step(dt)
+	local g = self.gravity * dt * dt
+	for _, p in self.points do
+		if not p.pinned then
+			local v = (p.pos - p.old) * self.damping
+			p.old = p.pos
+			p.pos += v + g
+		end
+	end
+
+	for _ = 1, self.iterations do
+		for _, s in self.sticks do
+			local a, b = s.a, s.b
+			local wa = if a.pinned then 0 else 1
+			local wb = if b.pinned then 0 else 1
+			if wa + wb > 0 then
+				local delta = b.pos - a.pos
+				local d = delta.Magnitude
+				if d > 1e-4 then
+					-- pull both ends back to rest length, pinned ends stay put
+					local k = (d - s.len) / d / (wa + wb)
+					a.pos += delta * (k * wa)
+					b.pos -= delta * (k * wb)
+				end
+			end
+		end
+	end
+end
+
+return Rope
